@@ -1,5 +1,3 @@
-"use client";
-
 import { Target, Eye, Users } from "lucide-react";
 
 export default function AboutContent() {

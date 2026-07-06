@@ -2,15 +2,32 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Activity, Mail, Lock, ArrowRight, Shield } from "lucide-react";
+import { Activity, Mail, Lock, ArrowRight, Shield, Loader2 } from "lucide-react";
+import axios from "axios";
+import { useAuth } from "../hooks/use-auth";
 
 export default function LoginForm() {
+  const { login, isLoggingIn, loginError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await login({
+        email,
+        password,
+      });
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
   };
+
+  const errorMsg = loginError
+    ? axios.isAxiosError(loginError)
+      ? loginError.response?.data?.message || loginError.message
+      : (loginError as Error).message || "Invalid credentials or login failed."
+    : null;
 
   return (
     <div className="relative min-h-screen bg-bg-dark flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -38,6 +55,11 @@ export default function LoginForm() {
 
         <div className="glass-panel-glow rounded-2xl p-8 shadow-xl">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {errorMsg && (
+              <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
+                {errorMsg}
+              </div>
+            )}
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
@@ -51,6 +73,7 @@ export default function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@company.com"
+                    disabled={isLoggingIn}
                     className="w-full pl-11 pr-4 py-3 rounded-lg glass-input text-sm"
                   />
                 </div>
@@ -73,6 +96,7 @@ export default function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    disabled={isLoggingIn}
                     className="w-full pl-11 pr-4 py-3 rounded-lg glass-input text-sm"
                   />
                 </div>
@@ -95,10 +119,20 @@ export default function LoginForm() {
 
             <button
               type="submit"
-              className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(255,1,79,0.3)] hover:shadow-[0_0_25px_rgba(255,1,79,0.5)] flex items-center justify-center gap-2 group"
+              disabled={isLoggingIn}
+              className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(255,1,79,0.3)] hover:shadow-[0_0_25px_rgba(255,1,79,0.5)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Sign In</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
             </button>
           </form>
         </div>

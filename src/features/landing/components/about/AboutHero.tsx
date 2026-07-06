@@ -1,5 +1,3 @@
-"use client";
-
 import { Award } from "lucide-react";
 
 export default function AboutHero() {

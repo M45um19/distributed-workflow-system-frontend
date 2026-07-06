@@ -1,5 +1,3 @@
-"use client";
-
 import HowItWorksHero from "@/features/landing/components/how-it-works/HowItWorksHero";
 import HowItWorksInteractive from "@/features/landing/components/how-it-works/HowItWorksInteractive";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import HeroSection from "@/features/landing/components/home/HeroSection";
 import StatsSection from "@/features/landing/components/home/StatsSection";
 import SimulatorSection from "@/features/landing/components/home/SimulatorSection";

@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Activity, Menu, X, ArrowRight } from "lucide-react";
+import { Activity, Menu, X, ArrowRight, LogOut, Loader2 } from "lucide-react";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +30,15 @@ export default function Navbar() {
     { name: "How It Works", href: "/integrations" },
     { name: "About", href: "/about" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsOpen(false);
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
   return (
     <nav
@@ -66,23 +77,66 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            {isAuthenticated && (
+              <Link
+                href="/dashboard"
+                className={`text-sm font-semibold tracking-wide transition-all duration-300 px-4 py-2 rounded-lg border ${pathname === "/dashboard"
+                    ? "text-primary bg-primary/10 border-primary/20 shadow-[0_0_15px_rgba(255,1,79,0.15)]"
+                    : "text-zinc-400 border-transparent hover:text-white hover:bg-white/5"
+                  }`}
+              >
+                Dashboard
+              </Link>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-300 px-4 py-2"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="relative group flex items-center gap-1 bg-primary text-white text-sm font-semibold px-5 py-2.5 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,1,79,0.4)]"
-            >
-              <span>Get Started</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <Link href="/dashboard" className="flex items-center gap-2 group">
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 group-hover:border-primary transition-colors duration-300">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={user?.avatar_url || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
+                      alt={user?.full_name || "Profile"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors duration-300">
+                    {user?.full_name}
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-1.5 text-zinc-400 hover:text-red-400 text-sm font-semibold px-3 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4" />
+                  )}
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-300 px-4 py-2"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="relative group flex items-center gap-1 bg-primary text-white text-sm font-semibold px-5 py-2.5 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,1,79,0.4)]"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -119,21 +173,65 @@ export default function Navbar() {
               </Link>
             );
           })}
+          {isAuthenticated && (
+            <Link
+              href="/dashboard"
+              onClick={() => setIsOpen(false)}
+              className={`block px-3 py-2.5 rounded-md text-base font-medium transition-colors ${pathname === "/dashboard"
+                  ? "bg-primary/10 text-primary border-l-2 border-primary"
+                  : "text-zinc-400 hover:bg-zinc-900/50 hover:text-white"
+                }`}
+            >
+              Dashboard
+            </Link>
+          )}
           <div className="pt-4 border-t border-zinc-800/80 flex flex-col gap-3">
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="text-center text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-300 py-2.5"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setIsOpen(false)}
-              className="block text-center bg-primary text-white text-sm font-semibold py-3 rounded-lg hover:bg-primary-hover transition-colors"
-            >
-              Get Started
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center gap-3 px-3 py-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={user?.avatar_url || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
+                      alt={user?.full_name || "Profile"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-zinc-300">
+                    {user?.full_name}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="w-full text-center bg-zinc-900 text-zinc-400 hover:text-red-400 border border-zinc-800 text-sm font-semibold py-3 rounded-lg hover:bg-red-500/5 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4" />
+                  )}
+                  <span>Sign Out</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="text-center text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-300 py-2.5"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-center bg-primary text-white text-sm font-semibold py-3 rounded-lg hover:bg-primary-hover transition-colors"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

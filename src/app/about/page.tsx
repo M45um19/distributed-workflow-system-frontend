@@ -1,5 +1,3 @@
-"use client";
-
 import AboutHero from "@/features/landing/components/about/AboutHero";
 import AboutContent from "@/features/landing/components/about/AboutContent";
 
