@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { LayoutDashboard, FolderGit2, CheckSquare, Settings, LogOut, Loader2, Activity } from "lucide-react";
+import { LayoutDashboard, LogOut, Loader2, Activity } from "lucide-react";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
@@ -11,9 +11,6 @@ export default function DashboardSidebar() {
 
   const menuItems = [
     { name: "Workspace", href: "/dashboard/workspace", icon: LayoutDashboard },
-    { name: "Project", href: "/dashboard/project", icon: FolderGit2 },
-    { name: "Task", href: "/dashboard/task", icon: CheckSquare },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
   const handleLogout = async () => {
