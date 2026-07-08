@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { CreateWorkspaceInput, WorkspaceResponse, SingleWorkspaceResponse } from "../types/workspace.types";
+import { CreateWorkspaceInput, WorkspaceResponse, SingleWorkspaceResponse, WorkspaceMembersResponse } from "../types/workspace.types";
 
 export const workspaceService = {
   async getWorkspaces(page?: number, limit?: number): Promise<WorkspaceResponse> {
@@ -36,4 +36,10 @@ export const workspaceService = {
   async deleteWorkspace(id: string): Promise<void> {
     await apiClient.delete(`/workspace/${id}`);
   },
+
+  async getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMembersResponse> {
+    const response = await apiClient.get<WorkspaceMembersResponse>(`/workspace/${workspaceId}/members`);
+    return response.data;
+  },
 };
+

@@ -33,3 +33,21 @@ export interface SingleWorkspaceResponse {
   message: string;
   data: Workspace;
 }
+
+export const workspaceMemberSchema = z.object({
+  user_id: z.string(),
+  full_name: z.string(),
+  email: z.string().email(),
+  role: z.string(),
+  joined_at: z.string(),
+});
+
+export type WorkspaceMember = z.infer<typeof workspaceMemberSchema>;
+
+export interface WorkspaceMembersResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: WorkspaceMember[];
+}
+

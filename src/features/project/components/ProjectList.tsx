@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { FolderGit2, Plus, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProjects, useCreateProject } from "../hooks/use-project";
 import axios from "axios";
@@ -88,9 +89,10 @@ export default function ProjectList({ workspaceId }: ProjectListProps) {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <div
+              <Link
                 key={project.id}
-                className="glass-panel-glow border border-white/5 rounded-xl p-6 hover:border-primary/30 transition-all duration-300 space-y-4 flex flex-col justify-between"
+                href={`/dashboard/workspace/${workspaceId}/projects/${project.id}`}
+                className="glass-panel-glow border border-white/5 rounded-xl p-6 hover:border-primary/30 hover:scale-[1.01] transition-all duration-300 space-y-4 flex flex-col justify-between block cursor-pointer"
               >
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
@@ -109,8 +111,9 @@ export default function ProjectList({ workspaceId }: ProjectListProps) {
                 <div className="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-500 font-mono">
                   <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
                 </div>
-              </div>
+              </Link>
             ))}
+
           </div>
 
           {/* Pagination Arrows */}

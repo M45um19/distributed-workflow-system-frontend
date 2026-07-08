@@ -43,3 +43,12 @@ export function useCreateWorkspace() {
     },
   });
 }
+
+export function useWorkspaceMembers(workspaceId: string) {
+  return useQuery({
+    queryKey: ["workspace-members", workspaceId],
+    queryFn: () => workspaceService.getWorkspaceMembers(workspaceId),
+    enabled: !!workspaceId,
+  });
+}
+
