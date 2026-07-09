@@ -51,3 +51,39 @@ export interface WorkspaceMembersResponse {
   data: WorkspaceMember[];
 }
 
+export const workspaceInviteInputSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["ADMIN", "MEMBER", "VIEWER"]),
+});
+
+export type WorkspaceInviteInput = z.infer<typeof workspaceInviteInputSchema>;
+
+export interface WorkspaceInviteResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    invite_url: string;
+  };
+}
+
+export const acceptInviteInputSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+});
+
+export type AcceptInviteInput = z.infer<typeof acceptInviteInputSchema>;
+
+export interface AcceptInviteResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data?: {
+    workspace_id?: string;
+    workspace?: {
+      id: string;
+      name: string;
+    };
+    id?: string;
+  };
+}
+

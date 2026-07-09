@@ -5,9 +5,14 @@ import { useState } from "react";
 import { Activity, Mail, Lock, User, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../hooks/use-auth";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function RegisterForm() {
   const { register, isRegistering, registerError } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +25,7 @@ export default function RegisterForm() {
         email,
         password,
       });
+      router.push(redirectTo);
     } catch (err) {
       console.error("Registration failed:", err);
     }

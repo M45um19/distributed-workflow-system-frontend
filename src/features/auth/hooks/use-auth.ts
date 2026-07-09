@@ -31,7 +31,6 @@ export function useAuth() {
       setCookie("refreshToken", response.data.refreshToken, 7);
       setCookie("user", JSON.stringify(response.data.user), 7);
       queryClient.setQueryData(["auth-user"], response.data.user);
-      router.push("/dashboard");
     },
   });
 
@@ -42,7 +41,6 @@ export function useAuth() {
       setCookie("refreshToken", response.data.refreshToken, 7);
       setCookie("user", JSON.stringify(response.data.user), 7);
       queryClient.setQueryData(["auth-user"], response.data.user);
-      router.push("/dashboard");
     },
   });
 
