@@ -14,7 +14,7 @@ interface CreateTaskModalProps {
 }
 
 export default function CreateTaskModal({ workspaceId, projectId, isOpen, onClose }: CreateTaskModalProps) {
-  const createTaskMutation = useCreateTask(projectId);
+  const createTaskMutation = useCreateTask(workspaceId, projectId);
   const { data: membersData, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceId);
   const members = membersData?.data || [];
 

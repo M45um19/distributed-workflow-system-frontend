@@ -21,7 +21,7 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
   const { data: projectsData, isLoading: isProjectsLoading } = useProjects(workspaceId);
   const { data: ownedData, isLoading: isOwnedLoading } = useOwnedWorkspaces(1, 100);
   const { data: joinedData, isLoading: isJoinedLoading } = useJoinedWorkspaces(1, 100);
-  const { data: tasksData, isLoading: isTasksLoading } = useTasks(projectId, { page: 1, limit: LIMIT });
+  const { data: tasksData, isLoading: isTasksLoading } = useTasks(workspaceId, projectId, { page: 1, limit: LIMIT });
 
   const [columnTasks, setColumnTasks] = useState<Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", Task[]>>({
     TODO: [],
@@ -89,7 +89,7 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
     const nextPage = pages[status] + 1;
 
     try {
-      const response = await taskService.getTasks(projectId, {
+      const response = await taskService.getTasks(workspaceId, projectId, {
         status: [status],
         page: nextPage,
         limit: LIMIT,
