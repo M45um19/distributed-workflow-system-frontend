@@ -25,6 +25,9 @@ export interface WorkspaceResponse {
   success: boolean;
   message: string;
   data: Workspace[];
+  meta?: {
+    next_cursor?: string;
+  };
 }
 
 export interface SingleWorkspaceResponse {

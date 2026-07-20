@@ -11,14 +11,30 @@ interface ProjectListProps {
 }
 
 export default function ProjectList({ workspaceId }: ProjectListProps) {
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const LIMIT = 6;
 
-  const { data: projectsData, isLoading: isProjectsLoading } = useProjects(workspaceId, page, LIMIT);
+  const currentCursor = cursorHistory[cursorHistory.length - 1];
+  const { data: projectsData, isLoading: isProjectsLoading } = useProjects(workspaceId, currentCursor, LIMIT);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const projects = projectsData?.data || [];
+
+  const canGoPrevious = cursorHistory.length > 1;
+  const nextCursor = projectsData?.meta?.next_cursor;
+  const canGoNext = Boolean(nextCursor);
+
+  const handleNextPage = () => {
+    if (!nextCursor) return;
+    setCursorHistory((prev) => [...prev, nextCursor]);
+  };
+
+  const handlePreviousPage = () => {
+    if (cursorHistory.length > 1) {
+      setCursorHistory((prev) => prev.slice(0, -1));
+    }
+  };
 
   if (isProjectsLoading) {
     return (
@@ -95,15 +111,15 @@ export default function ProjectList({ workspaceId }: ProjectListProps) {
           {/* Pagination Arrows */}
           <div className="flex justify-end items-center gap-3 pt-4">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+              onClick={handlePreviousPage}
+              disabled={!canGoPrevious}
               className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-primary/30 disabled:opacity-40 disabled:hover:border-zinc-800 text-zinc-300 hover:text-white transition-all duration-200 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={projects.length < LIMIT}
+              onClick={handleNextPage}
+              disabled={!canGoNext}
               className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-primary/30 disabled:opacity-40 disabled:hover:border-zinc-800 text-zinc-300 hover:text-white transition-all duration-200 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />

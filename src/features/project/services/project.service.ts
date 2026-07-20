@@ -2,9 +2,9 @@ import { apiClient } from "@/lib/api-client";
 import { CreateProjectInput, ProjectListResponse, SingleProjectResponse } from "../types/project.types";
 
 export const projectService = {
-  async getProjects(workspaceId: string, page?: number, limit?: number): Promise<ProjectListResponse> {
+  async getProjects(workspaceId: string, cursor?: string, limit?: number): Promise<ProjectListResponse> {
     const response = await apiClient.get<ProjectListResponse>(`/workspace/${workspaceId}/projects`, {
-      params: { page, limit },
+      params: { cursor, limit },
     });
     return response.data;
   },

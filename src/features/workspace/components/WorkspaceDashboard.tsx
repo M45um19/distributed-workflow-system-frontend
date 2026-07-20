@@ -8,12 +8,15 @@ import CreateWorkspaceModal from "./CreateWorkspaceModal";
 
 export default function WorkspaceDashboard() {
   const [activeTab, setActiveTab] = useState<"owned" | "joined">("owned");
-  const [ownedPage, setOwnedPage] = useState(1);
-  const [joinedPage, setJoinedPage] = useState(1);
+  const [ownedCursorHistory, setOwnedCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [joinedCursorHistory, setJoinedCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const LIMIT = 6;
 
-  const { data: ownedData, isLoading: isOwnedLoading } = useOwnedWorkspaces(ownedPage, LIMIT);
-  const { data: joinedData, isLoading: isJoinedLoading } = useJoinedWorkspaces(joinedPage, LIMIT);
+  const currentOwnedCursor = ownedCursorHistory[ownedCursorHistory.length - 1];
+  const currentJoinedCursor = joinedCursorHistory[joinedCursorHistory.length - 1];
+
+  const { data: ownedData, isLoading: isOwnedLoading } = useOwnedWorkspaces(currentOwnedCursor, LIMIT);
+  const { data: joinedData, isLoading: isJoinedLoading } = useJoinedWorkspaces(currentJoinedCursor, LIMIT);
 
   const ownedWorkspaces = ownedData?.data || [];
   const joinedWorkspaces = joinedData?.data || [];
@@ -22,8 +25,37 @@ export default function WorkspaceDashboard() {
 
   const isCurrentTabLoading = activeTab === "owned" ? isOwnedLoading : isJoinedLoading;
   const currentWorkspaces = activeTab === "owned" ? ownedWorkspaces : joinedWorkspaces;
-  const currentPage = activeTab === "owned" ? ownedPage : joinedPage;
-  const setCurrentPage = activeTab === "owned" ? setOwnedPage : setJoinedPage;
+
+  const canGoPrevious = activeTab === "owned"
+    ? ownedCursorHistory.length > 1
+    : joinedCursorHistory.length > 1;
+
+  const nextCursor = activeTab === "owned"
+    ? ownedData?.meta?.next_cursor
+    : joinedData?.meta?.next_cursor;
+
+  const canGoNext = Boolean(nextCursor);
+
+  const handleNextPage = () => {
+    if (!nextCursor) return;
+    if (activeTab === "owned") {
+      setOwnedCursorHistory((prev) => [...prev, nextCursor]);
+    } else {
+      setJoinedCursorHistory((prev) => [...prev, nextCursor]);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (activeTab === "owned") {
+      if (ownedCursorHistory.length > 1) {
+        setOwnedCursorHistory((prev) => prev.slice(0, -1));
+      }
+    } else {
+      if (joinedCursorHistory.length > 1) {
+        setJoinedCursorHistory((prev) => prev.slice(0, -1));
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -127,15 +159,15 @@ export default function WorkspaceDashboard() {
           {/* Pagination Arrows */}
           <div className="flex justify-end items-center gap-3 pt-4">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={handlePreviousPage}
+              disabled={!canGoPrevious}
               className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-primary/30 disabled:opacity-40 disabled:hover:border-zinc-800 text-zinc-300 hover:text-white transition-all duration-200 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setCurrentPage((p) => p + 1)}
-              disabled={currentWorkspaces.length < LIMIT}
+              onClick={handleNextPage}
+              disabled={!canGoNext}
               className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-primary/30 disabled:opacity-40 disabled:hover:border-zinc-800 text-zinc-300 hover:text-white transition-all duration-200 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />

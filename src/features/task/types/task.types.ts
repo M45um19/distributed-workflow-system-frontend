@@ -42,5 +42,12 @@ export interface TaskListResponse {
     REVIEW: Task[];
     DONE: Task[];
   };
+  meta?: {
+    next_cursors?: Record<string, string>;
+  };
+}
+
+export interface UpdateTaskStatusInput {
+  status: string;
 }
 

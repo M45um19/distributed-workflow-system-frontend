@@ -25,6 +25,9 @@ export interface ProjectListResponse {
   success: boolean;
   message: string;
   data: Project[];
+  meta?: {
+    next_cursor?: string;
+  };
 }
 
 export interface SingleProjectResponse {

@@ -10,7 +10,7 @@ export const taskService = {
   async getTasks(
     workspaceId: string,
     projectId: string,
-    params?: { page?: number; limit?: number; status?: string | string[] }
+    params?: { cursor?: string; limit?: number; status?: string | string[] }
   ): Promise<TaskListResponse> {
     const statusParam = Array.isArray(params?.status) ? params.status.join(",") : params?.status;
     const response = await apiClient.get<TaskListResponse>(`/workspace/${workspaceId}/projects/${projectId}/tasks`, {
@@ -19,6 +19,17 @@ export const taskService = {
         status: statusParam,
       },
     });
+    return response.data;
+  },
+  async updateTaskStatus(
+    workspaceId: string,
+    taskId: string,
+    status: string
+  ): Promise<SingleTaskResponse> {
+    const response = await apiClient.patch<SingleTaskResponse>(
+      `/workspace/${workspaceId}/tasks/${taskId}/status`,
+      { status }
+    );
     return response.data;
   },
 };

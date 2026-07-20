@@ -2,24 +2,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspaceService } from "../services/workspace.service";
 import { CreateWorkspaceInput, WorkspaceInviteInput, AcceptInviteInput } from "../types/workspace.types";
 
-export function useWorkspaces(page?: number, limit?: number) {
+export function useWorkspaces(cursor?: string, limit?: number) {
   return useQuery({
-    queryKey: ["workspaces", page, limit],
-    queryFn: () => workspaceService.getWorkspaces(page, limit),
+    queryKey: ["workspaces", cursor, limit],
+    queryFn: () => workspaceService.getWorkspaces(cursor, limit),
   });
 }
 
-export function useOwnedWorkspaces(page?: number, limit?: number) {
+export function useOwnedWorkspaces(cursor?: string, limit?: number) {
   return useQuery({
-    queryKey: ["owned-workspaces", page, limit],
-    queryFn: () => workspaceService.getOwnedWorkspaces(page, limit),
+    queryKey: ["owned-workspaces", cursor, limit],
+    queryFn: () => workspaceService.getOwnedWorkspaces(cursor, limit),
   });
 }
 
-export function useJoinedWorkspaces(page?: number, limit?: number) {
+export function useJoinedWorkspaces(cursor?: string, limit?: number) {
   return useQuery({
-    queryKey: ["joined-workspaces", page, limit],
-    queryFn: () => workspaceService.getJoinedWorkspaces(page, limit),
+    queryKey: ["joined-workspaces", cursor, limit],
+    queryFn: () => workspaceService.getJoinedWorkspaces(cursor, limit),
   });
 }
 
