@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FolderGit2, ArrowLeft, Plus, Loader2, ChevronDown, User } from "lucide-react";
 import { useProjects } from "../hooks/use-project";
-import { useOwnedWorkspaces, useJoinedWorkspaces } from "@/features/workspace/hooks/use-workspace";
-import { useTasks } from "@/features/task/hooks/use-task";
+import { useTasks, useUpdateTaskStatus } from "@/features/task/hooks/use-task";
 import { taskService } from "@/features/task/services/task.service";
 import { Task } from "@/features/task/types/task.types";
 import CreateTaskModal from "@/features/task/components/CreateTaskModal";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useWorkspaceMembers } from "@/features/workspace/hooks/use-workspace";
 
 interface ProjectDetailsProps {
   workspaceId: string;
@@ -18,10 +19,16 @@ interface ProjectDetailsProps {
 export default function ProjectDetails({ workspaceId, projectId }: ProjectDetailsProps) {
   const LIMIT = 5;
 
+  const { user } = useAuth();
+  const { data: membersData } = useWorkspaceMembers(workspaceId);
+  const updateStatusMutation = useUpdateTaskStatus(workspaceId, projectId);
+
+  const currentMember = membersData?.data?.find((m) => m.user_id === user?.id);
+  const userRole = currentMember?.role?.toUpperCase();
+  const isOwnerOrAdmin = userRole === "OWNER" || userRole === "ADMIN";
+
   const { data: projectsData, isLoading: isProjectsLoading } = useProjects(workspaceId);
-  const { data: ownedData, isLoading: isOwnedLoading } = useOwnedWorkspaces(1, 100);
-  const { data: joinedData, isLoading: isJoinedLoading } = useJoinedWorkspaces(1, 100);
-  const { data: tasksData, isLoading: isTasksLoading } = useTasks(workspaceId, projectId, { page: 1, limit: LIMIT });
+  const { data: tasksData, isLoading: isTasksLoading } = useTasks(workspaceId, projectId, { limit: LIMIT });
 
   const [columnTasks, setColumnTasks] = useState<Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", Task[]>>({
     TODO: [],
@@ -30,18 +37,11 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
     DONE: [],
   });
 
-  const [pages, setPages] = useState<Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", number>>({
-    TODO: 1,
-    IN_PROGRESS: 1,
-    REVIEW: 1,
-    DONE: 1,
-  });
-
-  const [hasMore, setHasMore] = useState<Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", boolean>>({
-    TODO: false,
-    IN_PROGRESS: false,
-    REVIEW: false,
-    DONE: false,
+  const [nextCursors, setNextCursors] = useState<Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", string>>({
+    TODO: "",
+    IN_PROGRESS: "",
+    REVIEW: "",
+    DONE: "",
   });
 
   const [loadingMore, setLoadingMore] = useState<Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", boolean>>({
@@ -54,10 +54,14 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const project = projectsData?.data?.find((p) => p.id === projectId);
-  const workspace = ownedData?.data?.find((w) => w.id === workspaceId) || joinedData?.data?.find((w) => w.id === workspaceId);
+  const isLoading = isProjectsLoading || isTasksLoading;
 
-  const isWorkspaceLoading = isOwnedLoading || isJoinedLoading;
-  const isLoading = isProjectsLoading || isWorkspaceLoading || isTasksLoading;
+  const hasMore: Record<"TODO" | "IN_PROGRESS" | "REVIEW" | "DONE", boolean> = {
+    TODO: Boolean(nextCursors.TODO),
+    IN_PROGRESS: Boolean(nextCursors.IN_PROGRESS),
+    REVIEW: Boolean(nextCursors.REVIEW),
+    DONE: Boolean(nextCursors.DONE),
+  };
 
   useEffect(() => {
     if (tasksData?.data) {
@@ -67,54 +71,52 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
         REVIEW: tasksData.data.REVIEW || [],
         DONE: tasksData.data.DONE || [],
       });
-      setPages({
-        TODO: 1,
-        IN_PROGRESS: 1,
-        REVIEW: 1,
-        DONE: 1,
-      });
-      setHasMore({
-        TODO: (tasksData.data.TODO || []).length === LIMIT,
-        IN_PROGRESS: (tasksData.data.IN_PROGRESS || []).length === LIMIT,
-        REVIEW: (tasksData.data.REVIEW || []).length === LIMIT,
-        DONE: (tasksData.data.DONE || []).length === LIMIT,
+      setNextCursors({
+        TODO: tasksData.meta?.next_cursors?.TODO || "",
+        IN_PROGRESS: tasksData.meta?.next_cursors?.IN_PROGRESS || "",
+        REVIEW: tasksData.meta?.next_cursors?.REVIEW || "",
+        DONE: tasksData.meta?.next_cursors?.DONE || "",
       });
     }
   }, [tasksData]);
 
   const handleLoadMore = async (status: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE") => {
-    if (loadingMore[status] || !hasMore[status]) return;
+    const currentCursor = nextCursors[status];
+    if (loadingMore[status] || !currentCursor) return;
 
     setLoadingMore((prev) => ({ ...prev, [status]: true }));
-    const nextPage = pages[status] + 1;
 
     try {
       const response = await taskService.getTasks(workspaceId, projectId, {
         status: [status],
-        page: nextPage,
+        cursor: currentCursor,
         limit: LIMIT,
       });
 
       const newTasks = response.data?.[status] || [];
+      const newNextCursor = response.meta?.next_cursors?.[status] || "";
 
       setColumnTasks((prev) => ({
         ...prev,
         [status]: [...prev[status], ...newTasks],
       }));
 
-      setPages((prev) => ({
+      setNextCursors((prev) => ({
         ...prev,
-        [status]: nextPage,
-      }));
-
-      setHasMore((prev) => ({
-        ...prev,
-        [status]: newTasks.length === LIMIT,
+        [status]: newNextCursor,
       }));
     } catch (err) {
       console.error(`Failed to load more tasks for status ${status}:`, err);
     } finally {
       setLoadingMore((prev) => ({ ...prev, [status]: false }));
+    }
+  };
+
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      await updateStatusMutation.mutateAsync({ taskId, status: newStatus });
+    } catch (err) {
+      console.error("Failed to update task status:", err);
     }
   };
 
@@ -152,13 +154,13 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
           className="inline-flex items-center gap-2 text-zinc-400 hover:text-white text-xs font-semibold transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to {workspace?.name || "Workspace"} Projects
+          Back to Workspace Projects
         </Link>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-zinc-800/80 pb-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-500 font-mono">
-              <span>{workspace?.name}</span>
+              <span>Workspace</span>
               <span>/</span>
               <span className="text-zinc-400">{project.name}</span>
             </div>
@@ -233,6 +235,9 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
                       HIGH: "bg-red-500/10 text-red-400 border-red-500/20",
                     };
 
+                    const isAssignee = Boolean(user?.id && task.assignee_id === user.id);
+                    const canChangeStatus = isOwnerOrAdmin || isAssignee;
+
                     return (
                       <div
                         key={task.id}
@@ -240,6 +245,22 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
                       >
                         <div className="flex justify-between items-start gap-2">
                           <h4 className="text-sm font-semibold text-zinc-200 line-clamp-2">{task.title}</h4>
+                          {canChangeStatus && (
+                            <div className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <select
+                                value={task.status}
+                                onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                                disabled={updateStatusMutation.isPending}
+                                className="text-[10px] font-semibold bg-zinc-900 text-zinc-300 border border-zinc-700/80 rounded-md px-1.5 py-0.5 hover:border-primary/50 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                                title="Change Task Status"
+                              >
+                                <option value="TODO">To Do</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="REVIEW">In Review</option>
+                                <option value="DONE">Done</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
                         {task.description && (
                           <p className="text-xs text-zinc-400 line-clamp-2">{task.description}</p>

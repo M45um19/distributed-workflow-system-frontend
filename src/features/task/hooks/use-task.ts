@@ -16,12 +16,24 @@ export function useCreateTask(workspaceId: string, projectId: string) {
 export function useTasks(
   workspaceId: string,
   projectId: string,
-  params?: { page?: number; limit?: number; status?: string | string[] }
+  params?: { cursor?: string; limit?: number; status?: string | string[] }
 ) {
   return useQuery({
     queryKey: ["tasks", workspaceId, projectId, params],
     queryFn: () => taskService.getTasks(workspaceId, projectId, params),
     enabled: !!projectId && !!workspaceId,
+  });
+}
+
+export function useUpdateTaskStatus(workspaceId: string, projectId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
+      taskService.updateTaskStatus(workspaceId, taskId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId, projectId] });
+    },
   });
 }
 
