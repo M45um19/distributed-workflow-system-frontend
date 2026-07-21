@@ -25,6 +25,16 @@ export const createTaskInputSchema = z.object({
 
 export type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
 
+export const updateTaskInputSchema = z.object({
+  title: z.string().min(1, "Title is required").max(150),
+  description: z.string().max(1000).optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
+  assignee_id: z.string().min(1, "Assignee is required"),
+  deadline: z.string().optional(),
+});
+
+export type UpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
+
 export interface SingleTaskResponse {
   statusCode: number;
   success: boolean;

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FolderGit2, ArrowLeft, Plus, Loader2, ChevronDown, User } from "lucide-react";
+import { FolderGit2, ArrowLeft, Plus, Loader2, ChevronDown, User, Pencil } from "lucide-react";
 import { useProjects } from "../hooks/use-project";
 import { useTasks, useUpdateTaskStatus } from "@/features/task/hooks/use-task";
 import { taskService } from "@/features/task/services/task.service";
 import { Task } from "@/features/task/types/task.types";
 import CreateTaskModal from "@/features/task/components/CreateTaskModal";
+import EditTaskModal from "@/features/task/components/EditTaskModal";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useWorkspaceMembers } from "@/features/workspace/hooks/use-workspace";
 
@@ -52,6 +53,7 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const project = projectsData?.data?.find((p) => p.id === projectId);
   const isLoading = isProjectsLoading || isTasksLoading;
@@ -245,8 +247,17 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
                       >
                         <div className="flex justify-between items-start gap-2">
                           <h4 className="text-sm font-semibold text-zinc-200 line-clamp-2">{task.title}</h4>
-                          {canChangeStatus && (
-                            <div className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {isOwnerOrAdmin && (
+                              <button
+                                onClick={() => setEditingTask(task)}
+                                className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                                title="Edit Task"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {canChangeStatus && (
                               <select
                                 value={task.status}
                                 onChange={(e) => handleStatusChange(task.id, e.target.value)}
@@ -259,8 +270,8 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
                                 <option value="REVIEW">In Review</option>
                                 <option value="DONE">Done</option>
                               </select>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                         {task.description && (
                           <p className="text-xs text-zinc-400 line-clamp-2">{task.description}</p>
@@ -318,6 +329,15 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
         projectId={projectId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      {/* Edit Task Modal */}
+      <EditTaskModal
+        workspaceId={workspaceId}
+        projectId={projectId}
+        task={editingTask}
+        isOpen={Boolean(editingTask)}
+        onClose={() => setEditingTask(null)}
       />
     </div>
   );

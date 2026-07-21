@@ -1,9 +1,21 @@
 import { apiClient } from "@/lib/api-client";
-import { CreateTaskInput, SingleTaskResponse, TaskListResponse } from "../types/task.types";
+import { CreateTaskInput, SingleTaskResponse, TaskListResponse, UpdateTaskInput } from "../types/task.types";
 
 export const taskService = {
   async createTask(workspaceId: string, projectId: string, data: CreateTaskInput): Promise<SingleTaskResponse> {
     const response = await apiClient.post<SingleTaskResponse>(`/workspace/${workspaceId}/projects/${projectId}/tasks`, data);
+    return response.data;
+  },
+
+  async updateTask(
+    workspaceId: string,
+    taskId: string,
+    data: UpdateTaskInput
+  ): Promise<SingleTaskResponse> {
+    const response = await apiClient.put<SingleTaskResponse>(
+      `/workspace/${workspaceId}/tasks/${taskId}`,
+      data
+    );
     return response.data;
   },
 
