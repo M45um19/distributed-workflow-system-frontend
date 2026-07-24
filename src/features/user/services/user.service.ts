@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { UserProfileResponse, UpdateProfileInput } from "../types/user.types";
+import { UserProfileResponse, UpdateProfileInput, UserSessionsResponse } from "../types/user.types";
 
 export const userService = {
   async getProfile(): Promise<UserProfileResponse> {
@@ -11,4 +11,10 @@ export const userService = {
     const response = await apiClient.put<UserProfileResponse>("/users/profile", data);
     return response.data;
   },
+
+  async getSessions(): Promise<UserSessionsResponse> {
+    const response = await apiClient.get<UserSessionsResponse>("/users/sessions");
+    return response.data;
+  },
 };
+

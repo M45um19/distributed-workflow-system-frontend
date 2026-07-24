@@ -34,3 +34,25 @@ export const updateProfileInputSchema = z.object({
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
+
+export const userSessionSchema = z.object({
+  deviceId: z.string(),
+  ip: z.string(),
+  deviceName: z.string(),
+});
+
+export type UserSession = z.infer<typeof userSessionSchema>;
+
+export interface UserSessionResponse {
+  deviceId: string;
+  ip: string;
+  deviceName: string;
+}
+
+export interface UserSessionsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: UserSession[];
+}
+
