@@ -43,3 +43,11 @@ export function useUpdateProfile() {
     },
   });
 }
+
+export function useUserSessions() {
+  return useQuery({
+    queryKey: ["user-sessions"],
+    queryFn: () => userService.getSessions(),
+  });
+}
+
