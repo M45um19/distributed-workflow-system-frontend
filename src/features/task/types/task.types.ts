@@ -61,3 +61,40 @@ export interface UpdateTaskStatusInput {
   status: string;
 }
 
+export const taskCommentSchema = z.object({
+  id: z.string(),
+  workspace_id: z.string().optional(),
+  task_id: z.string().optional(),
+  user_id: z.string().optional(),
+  user_name: z.string().optional(),
+  content: z.string().min(1, "Comment content is required"),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+});
+
+export type TaskComment = z.infer<typeof taskCommentSchema>;
+
+export const commentCreateInputSchema = z.object({
+  content: z.string().min(1, "Comment content is required").max(1000, "Comment cannot exceed 1000 characters"),
+});
+
+export type CommentCreateInput = z.infer<typeof commentCreateInputSchema>;
+
+export interface SingleCommentResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: TaskComment;
+}
+
+export interface CommentListResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: TaskComment[];
+  meta?: {
+    next_cursor?: string;
+  };
+}
+
+
