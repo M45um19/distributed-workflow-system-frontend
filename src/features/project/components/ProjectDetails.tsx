@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FolderGit2, ArrowLeft, Plus, Loader2, ChevronDown, User, Pencil } from "lucide-react";
+import { FolderGit2, ArrowLeft, Plus, Loader2, ChevronDown, User, Pencil, MessageSquare } from "lucide-react";
 import { useProjects } from "../hooks/use-project";
 import { useTasks, useUpdateTaskStatus } from "@/features/task/hooks/use-task";
 import { taskService } from "@/features/task/services/task.service";
 import { Task } from "@/features/task/types/task.types";
 import CreateTaskModal from "@/features/task/components/CreateTaskModal";
 import EditTaskModal from "@/features/task/components/EditTaskModal";
+import TaskCommentsModal from "@/features/task/components/TaskCommentsModal";
+import TaskDetailsModal from "@/features/task/components/TaskDetailsModal";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useWorkspaceMembers } from "@/features/workspace/hooks/use-workspace";
 
@@ -54,6 +56,8 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+  const [commentingTask, setCommentingTask] = useState<Task | null>(null);
 
   const project = projectsData?.data?.find((p) => p.id === projectId);
   const isLoading = isProjectsLoading || isTasksLoading;
@@ -243,11 +247,22 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
                     return (
                       <div
                         key={task.id}
+                        onClick={() => setViewingTask(task)}
                         className="bg-zinc-950 border border-zinc-800/80 rounded-lg p-4 hover:border-zinc-700 transition-colors space-y-3 cursor-pointer"
                       >
                         <div className="flex justify-between items-start gap-2">
                           <h4 className="text-sm font-semibold text-zinc-200 line-clamp-2">{task.title}</h4>
                           <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCommentingTask(task);
+                              }}
+                              className="p-1 text-zinc-400 hover:text-primary hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                              title="Task Comments"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </button>
                             {isOwnerOrAdmin && (
                               <button
                                 onClick={() => setEditingTask(task)}
@@ -338,6 +353,22 @@ export default function ProjectDetails({ workspaceId, projectId }: ProjectDetail
         task={editingTask}
         isOpen={Boolean(editingTask)}
         onClose={() => setEditingTask(null)}
+      />
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal
+        task={viewingTask}
+        isOpen={Boolean(viewingTask)}
+        onClose={() => setViewingTask(null)}
+        onOpenComments={(task) => setCommentingTask(task)}
+      />
+
+      {/* Task Comments Modal */}
+      <TaskCommentsModal
+        workspaceId={workspaceId}
+        task={commentingTask}
+        isOpen={Boolean(commentingTask)}
+        onClose={() => setCommentingTask(null)}
       />
     </div>
   );

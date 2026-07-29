@@ -1,5 +1,13 @@
 import { apiClient } from "@/lib/api-client";
-import { CreateTaskInput, SingleTaskResponse, TaskListResponse, UpdateTaskInput } from "../types/task.types";
+import {
+  CommentCreateInput,
+  CommentListResponse,
+  CreateTaskInput,
+  SingleCommentResponse,
+  SingleTaskResponse,
+  TaskListResponse,
+  UpdateTaskInput,
+} from "../types/task.types";
 
 export const taskService = {
   async createTask(workspaceId: string, projectId: string, data: CreateTaskInput): Promise<SingleTaskResponse> {
@@ -33,6 +41,7 @@ export const taskService = {
     });
     return response.data;
   },
+
   async updateTaskStatus(
     workspaceId: string,
     taskId: string,
@@ -44,4 +53,29 @@ export const taskService = {
     );
     return response.data;
   },
+
+  async addComment(
+    workspaceId: string,
+    taskId: string,
+    data: CommentCreateInput
+  ): Promise<SingleCommentResponse> {
+    const response = await apiClient.post<SingleCommentResponse>(
+      `/workspace/${workspaceId}/tasks/${taskId}/comments`,
+      data
+    );
+    return response.data;
+  },
+
+  async getComments(
+    workspaceId: string,
+    taskId: string,
+    params?: { cursor?: string; limit?: number }
+  ): Promise<CommentListResponse> {
+    const response = await apiClient.get<CommentListResponse>(
+      `/workspace/${workspaceId}/tasks/${taskId}/comments`,
+      { params }
+    );
+    return response.data;
+  },
 };
+
